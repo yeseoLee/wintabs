@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="WinTabs.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="WinTabs">
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title bar row: File Explorer-style tab strip. Caption buttons are drawn by the system on the right. -->
+        <Grid x:Name="TitleBarArea" Grid.Row="0" Height="40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Explorer draws the tab-content border line across the whole strip; the selected tab covers it. -->
+            <Border Grid.Column="0" Grid.ColumnSpan="3" Height="1" VerticalAlignment="Bottom"
+                    Background="{ThemeResource TabViewBorderBrush}"/>
+
+            <TabView x:Name="Tabs"
+                     Grid.Column="1"
+                     VerticalAlignment="Bottom"
+                     TabWidthMode="Equal"
+                     IsAddTabButtonVisible="True"
+                     CanReorderTabs="True"
+                     CanDragTabs="True"
+                     AllowDropTabs="True"
+                     AddTabButtonClick="Tabs_AddTabButtonClick"
+                     TabCloseRequested="Tabs_TabCloseRequested"
+                     SelectionChanged="Tabs_SelectionChanged"
+                     TabDragStarting="Tabs_TabDragStarting"
+                     TabDragCompleted="Tabs_TabDragCompleted"
+                     TabDroppedOutside="Tabs_TabDroppedOutside"
+                     TabStripDragOver="Tabs_TabStripDragOver"
+                     TabStripDrop="Tabs_TabStripDrop">
+                <TabView.TabStripHeader>
+                    <Grid x:Name="LeftDragRegion" Width="8" Background="Transparent"/>
+                </TabView.TabStripHeader>
+                <TabView.TabStripFooter>
+                    <!-- Fills the rest of the strip and acts as the window drag region. -->
+                    <Grid x:Name="DragRegion" Background="Transparent" MinWidth="48"/>
+                </TabView.TabStripFooter>
+            </TabView>
+        </Grid>
+
+        <!-- The grouped application window is positioned over this area (see CapturedWindow.Layout). -->
+        <Grid x:Name="ContentHost" Grid.Row="1" SizeChanged="ContentHost_SizeChanged">
+            <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Visibility="Collapsed">
+                <FontIcon Glyph="&#xE8A7;" FontSize="44" Opacity="0.55" HorizontalAlignment="Center"/>
+                <TextBlock Text="열린 탭이 없습니다" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"/>
+                <TextBlock Opacity="0.75" TextWrapping="Wrap" MaxWidth="440" TextAlignment="Center"
+                           Text="위의 + 단추로 탐색기·명령 프롬프트·메모장을 열거나 실행 중인 창을 가져오세요. 다른 창에서 Ctrl+Alt+T 를 누르면 그 창이 이 그룹의 탭이 됩니다."/>
+            </StackPanel>
+            <ProgressRing x:Name="LoadingRing" Width="36" Height="36" IsActive="False" Visibility="Collapsed"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</Window>
