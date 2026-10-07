@@ -19,6 +19,10 @@
 4. 선택되지 않은 탭의 창은 숨깁니다. 호스트 창 이동/크기 변경, 포그라운드 변경, 창 파괴, 제목 변경은 `SetWinEventHook` 으로 추적합니다.
 5. 탭을 닫으면 `WM_CLOSE` 를 보내고, 분리하거나 WinTabs 창을 닫으면 저장해 둔 스타일/소유자/영역을 그대로 복원합니다.
 
+## 다운로드
+
+[GitHub Releases](https://github.com/yeseoLee/wintabs/releases) 의 `WinTabs-v*-win-x64.zip` 을 받아 아무 폴더에나 풀고 `WinTabs.exe` 를 실행하면 됩니다. `release` 브랜치에 푸시하면 GitHub Actions(`.github/workflows/release.yml`)가 Windows 러너에서 self-contained 빌드를 만들어 릴리스를 자동 생성합니다. 버전은 `src\WinTabs\WinTabs.csproj` 의 `<Version>` 을 따릅니다.
+
 ## 빌드
 
 요구 사항: Windows 10 1809 이상(Windows 11 권장), **.NET 8 SDK**. Visual Studio 는 필요하지 않습니다 (`EnableMsixTooling` 로 Windows App SDK 에 포함된 PRI 도구를 사용).

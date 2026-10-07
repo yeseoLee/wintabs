@@ -1,0 +1,79 @@
+# Pushing to the `release` branch (or running this manually) builds the self-contained x64 app
+# on a Windows runner, zips it and publishes a GitHub Release tagged after <Version> in the csproj
+# (v0.1.0; if that tag already exists the run number is appended, e.g. v0.1.0-r12).
+name: Release
+
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Read version from csproj
+        id: ver
+        shell: pwsh
+        run: |
+          [xml]$proj = Get-Content src/WinTabs/WinTabs.csproj
+          $version = @($proj.Project.PropertyGroup.Version | Where-Object { $_ })[0]
+          if (-not $version) { throw "No <Version> in WinTabs.csproj" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "Version: $version"
+
+      - name: Publish (self-contained, win-x64)
+        shell: pwsh
+        run: |
+          dotnet publish src/WinTabs/WinTabs.csproj -c Release -r win-x64 -p:Platform=x64 --self-contained true -o dist/WinTabs
+          if ($LASTEXITCODE -ne 0) { throw "publish failed" }
+          if (-not (Test-Path dist/WinTabs/WinTabs.exe)) { throw "WinTabs.exe missing from publish output" }
+
+      - name: Zip
+        id: zip
+        shell: pwsh
+        run: |
+          $name = "WinTabs-v${{ steps.ver.outputs.version }}-win-x64.zip"
+          Compress-Archive -Path dist/WinTabs/* -DestinationPath $name -CompressionLevel Optimal
+          "asset=$name" >> $env:GITHUB_OUTPUT
+          "{0:N1} MB" -f ((Get-Item $name).Length / 1MB)
+
+      - name: Pick tag
+        id: tag
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $base = "v${{ steps.ver.outputs.version }}"
+          $tag = $base
+          gh release view $base *> $null
+          if ($LASTEXITCODE -eq 0) { $tag = "$base-r${{ github.run_number }}" }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "Tag: $tag"
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" "${{ steps.zip.outputs.asset }}" `
+            --title "WinTabs ${{ steps.tag.outputs.tag }}" `
+            --target "${{ github.sha }}" `
+            --generate-notes
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
